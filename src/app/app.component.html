@@ -1,0 +1,117 @@
+<main class="container">
+  <header>
+    <h1>GASTOSPE · Finanzas Local + WhatsApp + iPhone</h1>
+    <p>
+      Estado de red:
+      <strong [class.online]="online()" [class.offline]="!online()">
+        {{ online() ? 'Online' : 'Offline' }}
+      </strong>
+    </p>
+  </header>
+
+  <section class="card">
+    <h2>Cargar movimiento</h2>
+    <form [formGroup]="form" (ngSubmit)="submit()" class="grid">
+      <label>
+        Tipo
+        <select formControlName="movementType">
+          <option value="ingreso">Ingreso</option>
+          <option value="egreso">Egreso</option>
+          <option value="pago">Pago</option>
+        </select>
+      </label>
+
+      <label>
+        Monto
+        <input type="number" min="1" formControlName="amount" />
+      </label>
+
+      <label>
+        Categoría
+        <input type="text" formControlName="category" placeholder="Supermercado, Alquiler..." />
+      </label>
+
+      <label>
+        Nota
+        <input type="text" formControlName="note" placeholder="Detalle opcional" />
+      </label>
+
+      <label>
+        Fuente
+        <select formControlName="source">
+          <option value="manual">Manual</option>
+          <option value="iphone-shortcuts">iPhone Shortcut</option>
+          <option value="whatsapp">WhatsApp</option>
+        </select>
+      </label>
+
+      <button type="submit">Guardar local</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Captura rápida desde WhatsApp</h2>
+    <p>Formato sugerido: <code>egreso 2500 supermercado</code></p>
+    <div class="inline">
+      <input [formControl]="whatsappInput" placeholder="Pega mensaje de WhatsApp" />
+      <button (click)="importWhatsApp()">Importar</button>
+      <a
+        class="button secondary"
+        href="https://wa.me/?text=egreso%202500%20supermercado"
+        target="_blank"
+        rel="noreferrer"
+        >Abrir WhatsApp</a
+      >
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Sincronización a Google Sheet / Excel Online</h2>
+    <label>
+      Endpoint (Apps Script o Firebase Function)
+      <input formControlName="sheetEndpoint" [formControl]="form.controls.sheetEndpoint" />
+    </label>
+    <div class="inline">
+      <button (click)="syncNow()" [disabled]="syncing()">
+        {{ syncing() ? 'Sincronizando...' : 'Sincronizar ahora' }}
+      </button>
+    </div>
+    @if (syncMessage()) {
+    <p class="message">{{ syncMessage() }}</p>
+    }
+  </section>
+
+  <section class="card">
+    <h2>Resumen</h2>
+    <div class="summary">
+      <p>Ingresos: <strong>{{ incomeTotal() | currency : 'USD' }}</strong></p>
+      <p>Egresos/Pagos: <strong>{{ expenseTotal() | currency : 'USD' }}</strong></p>
+      <p>Balance: <strong>{{ incomeTotal() - expenseTotal() | currency : 'USD' }}</strong></p>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Tipo</th>
+          <th>Monto</th>
+          <th>Categoría</th>
+          <th>Fuente</th>
+          <th>Sync</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (record of records(); track record.id) {
+        <tr>
+          <td>{{ record.createdAt | date : 'short' }}</td>
+          <td>{{ record.movementType }}</td>
+          <td>{{ record.amount | currency : 'USD' }}</td>
+          <td>{{ record.category }}</td>
+          <td>{{ record.source }}</td>
+          <td>{{ record.synced ? '✅' : '⏳' }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+</main>
